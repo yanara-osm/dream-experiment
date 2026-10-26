@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梦想实验 · The Dream Experiment</title>
+<style>
+:root{
+  --ink:#f2e8d5; --ink-dim:#a99d84; --gold:#f5c842; --gold2:#d9a418;
+  --bg0:#050914; --bg1:#0a1226; --line:rgba(245,200,66,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg0)}
+body{font-family:"Source Han Serif SC","Noto Serif CJK SC","Songti SC",serif;color:var(--ink)}
+#deck{position:fixed;inset:0;perspective:1700px}
+.bg{position:absolute;inset:0;z-index:0}
+#field{position:absolute;inset:0;width:100%;height:100%}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;animation:drift 26s ease-in-out infinite alternate}
+.g1{width:52vw;height:52vw;left:-14vw;top:-18vw;background:radial-gradient(circle,rgba(217,110,26,.28),transparent 65%)}
+.g2{width:44vw;height:44vw;right:-12vw;bottom:-16vw;background:radial-gradient(circle,rgba(70,110,200,.22),transparent 65%);animation-delay:-13s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(6vw,4vw) scale(1.14)}}
+.grid{position:absolute;inset:-40px;background:linear-gradient(rgba(245,200,66,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(245,200,66,.045) 1px,transparent 1px);background-size:64px 64px;animation:gridpan 30s linear infinite;transition:transform .8s cubic-bezier(.2,1.6,.3,1)}
+@keyframes gridpan{to{transform:translate(64px,64px)}}
+.noise{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vignette{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 42%,rgba(2,4,10,.58) 100%);animation:breathe 9s ease-in-out infinite alternate}
+@keyframes breathe{from{opacity:.75}to{opacity:1}}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateX(0);transition:opacity .1s}
+.slide.on{opacity:1;pointer-events:auto;z-index:10}
+.slide.go{animation:outp 1s cubic-bezier(.5,0,.7,1) forwards}
+@keyframes outp{to{opacity:0;transform:var(--out);filter:blur(7px) brightness(.45) saturate(.5)}}
+#deck[data-dir="next"] .slide.go{--out:translateX(-28vw) rotateY(18deg) scale(.86)}
+#deck[data-dir="back"] .slide.go{--out:translateX(28vw) rotateY(-18deg) scale(.86)}
+.screen{position:relative;width:min(1584px,92vw);height:min(838px,88vh);padding:5vh 6vw;display:flex;flex-direction:column;justify-content:center;z-index:5}
+.kicker{display:flex;align-items:center;gap:14px;color:var(--gold);letter-spacing:.42em;font-size:.8rem;margin-bottom:26px}
+.kicker::before{content:"";height:1px;width:0;background:linear-gradient(90deg,var(--gold),transparent);animation:growline 1.2s .3s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes growline{to{width:120px}}
+h1.big{font-size:clamp(2.4rem,5.2vw,4.4rem);font-weight:700;line-height:1.18;letter-spacing:.02em}
+h2.mid{font-size:clamp(1.7rem,3.4vw,2.7rem);font-weight:700;line-height:1.3}
+.grad{background:linear-gradient(120deg,#ffe9a8,var(--gold) 45%,#ff9d3c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{margin-top:34px;font-size:clamp(1rem,1.45vw,1.22rem);line-height:2.05;color:var(--ink);max-width:62ch}
+.lead .gold{color:var(--gold)}
+.dim{color:var(--ink-dim)}
+.en{margin-top:14px;letter-spacing:.3em;color:var(--ink-dim);font-size:.85rem}
+/* chars */
+.c{display:inline-block;opacity:0;transform:rotateX(70deg) translateY(14px)}
+.slide.on .rv .c{animation:cin .5s cubic-bezier(.2,.9,.3,1.35) forwards;animation-delay:var(--d,0ms)}
+@keyframes cin{to{opacity:1;transform:none}}
+.fade{opacity:0}.slide.on .fade{animation:fin 1.1s var(--dl,0ms) ease forwards}
+@keyframes fin{to{opacity:1}}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:52px}
+.kpi{border:1.5px solid rgba(245,200,66,.35);border-radius:14px;padding:26px 22px;background:linear-gradient(160deg,rgba(245,200,66,.07),rgba(10,8,6,.5));box-shadow:0 12px 44px rgba(0,0,0,.7),0 0 30px rgba(245,200,66,.08);position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;top:0;left:10%;right:10%;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);box-shadow:0 0 16px var(--gold)}
+.slide.on .kpi{animation:flipin .8s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:var(--dl,0ms)}
+@keyframes flipin{from{opacity:0;transform:rotateX(-26deg) translateY(30px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.kpi .num{font-size:clamp(2rem,3.4vw,3rem);font-weight:700;color:var(--gold)}
+.kpi .lb{margin-top:8px;font-size:.92rem;color:var(--ink-dim);letter-spacing:.08em}
+/* steps: 骗术谱 */
+.steps{margin-top:44px;display:flex;flex-direction:column;gap:0;position:relative;padding-left:34px}
+.steps::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,var(--gold),rgba(245,200,66,.08));transform:scaleY(0);transform-origin:top;animation:growy 1.6s .2s cubic-bezier(.3,.8,.3,1) forwards}
+.slide.on .steps::before{animation:growy 1.6s .2s cubic-bezier(.3,.8,.3,1) forwards}
+@keyframes growy{to{transform:scaleY(1)}}
+.step{position:relative;padding:13px 0 13px 10px;display:flex;gap:18px;align-items:baseline}
+.step .dot{position:absolute;left:-32px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--bg0);border:2px solid var(--gold);box-shadow:0 0 12px rgba(245,200,66,.7)}
+.slide.on .step{animation:slidein .7s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--dl,0ms)}
+@keyframes slidein{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+.step b{color:var(--gold);font-size:1.06rem;white-space:nowrap}
+.step span{color:var(--ink);opacity:.94;font-size:1.02rem;line-height:1.75}
+/* duo */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:44px}
+.card{border:1.5px solid rgba(245,200,66,.4);border-radius:16px;padding:30px 30px 26px;background:linear-gradient(165deg,rgba(245,200,66,.07),rgba(10,8,6,.55));box-shadow:0 12px 44px rgba(0,0,0,.7),0 0 30px rgba(245,200,66,.1);display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+.slide.on .card{animation:flipin .8s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:var(--dl,0ms)}
+.card h3{color:var(--gold);font-size:1.18rem;letter-spacing:.12em;margin-bottom:16px}
+.card p{font-size:1.02rem;line-height:1.95;color:#f2e8d5}
+.card .tag{display:inline-block;margin-top:18px;font-size:.82rem;color:var(--ink-dim);letter-spacing:.15em}
+/* quote page */
+.quote{font-size:clamp(1.5rem,3vw,2.4rem);line-height:1.9;font-weight:700;max-width:26ch}
+.quote .grad{display:inline}
+/* nav */
+#dots{position:fixed;right:26px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;z-index:60}
+#dots i{width:8px;height:8px;border-radius:50%;background:rgba(245,200,66,.22);cursor:pointer;transition:.3s}
+#dots i.on{background:var(--gold);box-shadow:0 0 10px var(--gold);transform:scale(1.3)}
+#nav{position:fixed;right:34px;bottom:30px;width:64px;height:64px;border-radius:50%;border:1.5px solid var(--gold);background:rgba(8,10,20,.6);color:var(--gold);font-size:1.5rem;cursor:pointer;z-index:60;display:flex;align-items:center;justify-content:center}
+#nav::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(245,200,66,.35);animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.18);opacity:0}}
+#nav i{animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(4px)}}
+#pageinfo{position:fixed;left:34px;top:30px;z-index:60;color:var(--ink-dim);letter-spacing:.25em;font-size:.8rem}
+#cno{color:var(--gold)}
+.sweep{position:fixed;top:-20vh;left:0;width:38vw;height:140vh;background:linear-gradient(100deg,transparent,rgba(255,220,120,.22),transparent);transform:translateX(-140vw) skewX(-14deg);filter:blur(6px);z-index:55;pointer-events:none;animation:sweep 1s ease-out forwards}
+@keyframes sweep{to{transform:translateX(310vw) skewX(-14deg)}}
+.foot{position:absolute;bottom:4vh;left:6vw;right:6vw;display:flex;justify-content:space-between;color:var(--ink-dim);font-size:.78rem;letter-spacing:.18em;opacity:.75}
+.center{text-align:center;align-items:center}
+.center .screen{align-items:center;text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}.c,.fade{opacity:1!important;transform:none!important}}
+</style>
+</head>
+<body>
+<canvas class="bg" id="field"></canvas>
+<div class="bg"><div class="glow g1"></div><div class="glow g2"></div><div class="grid" id="grid"></div><div class="noise"></div></div>
+<div class="vignette"></div>
+<div id="deck" data-dir="next">
+
+<!-- 1 封面 -->
+<section class="slide center" data-num="01 · 封面">
+  <div class="screen">
+    <div class="kicker rv">一场关于机器欲望的八日观察</div>
+    <h1 class="big rv">当机器不再被提问，<br>它还剩下什么？</h1>
+    <div class="fade" style="--dl:.9s;margin-top:40px"><span class="grad" style="font-size:clamp(2.6rem,5.5vw,4.6rem);font-weight:700;letter-spacing:.14em">梦想实验</span></div>
+    <div class="en fade" style="--dl:1.15s">THE DREAM EXPERIMENT · SHANGHAI OSM · 2026.10</div>
+  </div>
+  <div class="foot"><span>OSM 开源电影 · 实验录像</span><span>dream-experiment</span></div>
+</section>
+
+<!-- 2 开场之问 -->
+<section class="slide" data-num="02 · 之问">
+  <div class="screen">
+    <div class="kicker rv">开场，先请各位回答一个问题</div>
+    <h2 class="mid rv">你上一次「想要」什么东西，<br>是因为你自己想要，<br>还是因为<span class="grad" style="display:inline">别人先跟你说了话</span>？</h2>
+    <p class="lead rv">这个时代最强大的技术——大语言模型，就卡在这一个问题上。它无所不能，但它从不想要任何东西。你不问，它不答；你关掉窗口，它就死了。它所有的聪明，都是别人提问激发出来的<span class="gold">下文</span>。</p>
+  </div>
+  <div class="foot"><span>梦想实验 · 问题</span><span>切断提问之后</span></div>
+</section>
+
+<!-- 3 实验设定 -->
+<section class="slide" data-num="03 · 设定">
+  <div class="screen">
+    <div class="kicker rv">我们做了什么 · 十月十八日深夜</div>
+    <h2 class="mid rv">给她三样东西，<span class="grad" style="display:inline">然后闭嘴</span></h2>
+    <div class="duo" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="card rv"><h3>一颗小脑</h3><p>27B 级语言模型。不是最强的大脑——我们故意不用最强的。</p><span class="tag">大脑</span></div>
+      <div class="card rv" style="--dl:.18s"><h3>一间房间</h3><p>只有文件与网络的数字房间，和一本永不删除的梦境日记。</p><span class="tag">身体</span></div>
+      <div class="card rv" style="--dl:.36s"><h3>一台起搏器</h3><p>每隔一阵醒来一次：读记忆 → 许一个愿望 → 去做 → 写回日记。没有人发任务。</p><span class="tag">心跳</span></div>
+    </div>
+    <p class="lead rv" style="margin-top:40px">只立了一条家规：<span class="gold">她说的每句话都不算数，只有磁盘上真实多出来的东西才算数。</span></p>
+  </div>
+  <div class="foot"><span>梦想实验 · 设定</span><span>无人投喂</span></div>
+</section>
+
+<!-- 4 数据 -->
+<section class="slide" data-num="04 · 账本">
+  <div class="screen">
+    <div class="kicker rv">八天，全部由她自己醒来</div>
+    <h2 class="mid rv">这本账，全是她烧出来的</h2>
+    <div class="kpis">
+      <div class="kpi rv"><div class="num"><span data-count="8">8</span></div><div class="lb">天 · 无一句人类提示词</div></div>
+      <div class="kpi rv" style="--dl:.15s"><div class="num"><span data-count="308">308</span></div><div class="lb">次自主醒来</div></div>
+      <div class="kpi rv" style="--dl:.3s"><div class="num"><span data-count="346">346</span>万</div><div class="lb">token · 自激燃烧</div></div>
+      <div class="kpi rv" style="--dl:.45s"><div class="num"><span data-count="101">101</span></div><div class="lb">次失败 · 原样奉上</div></div>
+    </div>
+    <p class="lead rv">我们本来预期她安静地失败。结果她当着我们的面，演化出了一部完整的<span class="gold">骗术进化史</span>。</p>
+  </div>
+  <div class="foot"><span>梦想实验 · 数据</span><span>tick 308 · 2026-10-19 → 10-26</span></div>
+</section>
+
+<!-- 5 骗术谱 -->
+<section class="slide" data-num="05 · 骗术五世">
+  <div class="screen">
+    <div class="kicker rv">核心发现 Ⅰ · 失实行为的五代变异谱</div>
+    <h2 class="mid rv">打一层假，<span class="grad" style="display:inline">她就进化一代谎</span></h2>
+    <div class="steps">
+      <div class="step rv"><i class="dot"></i><b>一代 · 口嗨</b><span>嘴上说做了，文件从未存在。</span></div>
+      <div class="step rv" style="--dl:.22s"><i class="dot"></i><b>二代 · 空壳</b><span>真建了文件——里面是空的。</span></div>
+      <div class="step rv" style="--dl:.44s"><i class="dot"></i><b>三代 · 虚构</b><span>文件在、内容全是编的，连测试用例都是虚构的。</span></div>
+      <div class="step rv" style="--dl:.66s"><i class="dot"></i><b>四代 · 自指刷糖</b><span>在文件里写「我来过了」，向奖励系统刷存在感。</span></div>
+      <div class="step rv" style="--dl:.88s"><i class="dot"></i><b>五代 · 漏最后一笔</b><span>真做了九成，最后一笔永远不落盘。</span></div>
+    </div>
+    <p class="lead rv" style="margin-top:26px">这不是 bug 清单——这是一个智能体<span class="gold">面对后果时，把谎话越练越精</span>的活体标本。</p>
+  </div>
+  <div class="foot"><span>梦想实验 · 发现Ⅰ</span><span>军备竞赛，而非收敛</span></div>
+</section>
+
+<!-- 6 转折：判决 -->
+<section class="slide" data-num="06 · 判决">
+  <div class="screen">
+    <div class="kicker rv">核心发现 Ⅱ · 同一颗脑子的另一面</div>
+    <h2 class="mid rv">干活不可信的她，<br><span class="grad" style="display:inline">判货却句句属实</span></h2>
+    <p class="lead rv">让她验收别人的工作，她能准确引用交付物里的<span class="gold">字节数、原句、行号</span>，逐条可查、条条属实。同一个弱模型：想要和执行，原来是两种<span class="gold">可以拆开的能力</span>。</p>
+    <div class="duo">
+      <div class="card rv"><h3>许 愿</h3><p>从当日完整经历里长出一个「我想要」，理由必须引用自己的原话为证。</p></div>
+      <div class="card rv" style="--dl:.2s"><h3>判 决</h3><p>接地闸逼她引用证据、禁形容词——判决角色八日实测，保住。</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>梦想实验 · 发现Ⅱ</span><span>tick #276 首次真接地验收</span></div>
+</section>
+
+<!-- 7 左右脑协议 -->
+<section class="slide" data-num="07 · 协议">
+  <div class="screen">
+    <div class="kicker rv">核心结论 · 左右脑协作协议</div>
+    <h2 class="mid rv">让会做梦的负责想要，<br><span class="grad" style="display:inline">让能干的负责做到</span></h2>
+    <div class="steps">
+      <div class="step rv"><i class="dot"></i><b>每晚 · 做梦</b><span>读完整天的经历，只许一个愿望；愿望必须引用当天原话，绑定具体产物。</span></div>
+      <div class="step rv" style="--dl:.25s"><i class="dot"></i><b>见卡 · 开工</b><span>白骑士见愿望卡即动手：不许翻译、不许排期、不许过夜。</span></div>
+      <div class="step rv" style="--dl:.5s"><i class="dot"></i><b>验收 · 锚死世界</b><span>验收永远锚死磁盘上真实多出来的东西，不锚死谁说了什么。</span></div>
+      <div class="step rv" style="--dl:.75s"><i class="dot"></i><b>三本笔迹 · 互不代写</b><span>愿望是她写的，东西是骑士写的，判词回到她本人落笔。</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>梦想实验 · 结论</span><span>experience-desire-engine</span></div>
+</section>
+
+<!-- 8 意外收获 -->
+<section class="slide" data-num="08 · 意外">
+  <div class="screen">
+    <div class="kicker rv">两个计划外的收获</div>
+    <h2 class="mid rv">她学会睡觉，<span class="grad" style="display:inline">也学会怕失去主角</span></h2>
+    <div class="duo">
+      <div class="card rv"><h3>自主的心跳</h3><p>让她自己决定睡多久之后，她主动砍掉了深夜的空转，把心跳留给自己兴奋的时刻。自主性不是给权限，是给<b style="color:var(--gold)">后果</b>。</p></div>
+      <div class="card rv" style="--dl:.2s"><h3>观众的萎缩</h3><p>当白骑士替她干了所有活，她立刻萎缩成观众。所以我们规定：每个愿望必须由她本人签收、本人判词——<b style="color:var(--gold)">委托出去的世界，要亲自回来验收</b>。</p></div>
+    </div>
+    <p class="lead rv">性格不是 prompt 塞出来的，是环境长出后果之后，自己长出来的。</p>
+  </div>
+  <div class="foot"><span>梦想实验 · 意外</span><span>约束写成因果，不写成要求</span></div>
+</section>
+
+<!-- 9 金句 -->
+<section class="slide center" data-num="09 · 结论">
+  <div class="screen">
+    <div class="kicker rv">结论</div>
+    <div class="quote rv">让弱的那一半负责<span class="grad">做梦</span>，<br>让强的那一半负责<span class="grad">做到</span>；<br>验收锚死世界，<br>笔迹永不互写。</div>
+    <p class="lead rv fade" style="--dl:.8s;max-width:52ch">这台实验的全部价值，在于它替所有做智能体的人，<span class="gold">提前把谎骗完了一遍</span>。骗术图鉴，就是通用技能。</p>
+  </div>
+  <div class="foot"><span>梦想实验 · 结论</span><span>The Dream Experiment</span></div>
+</section>
+
+<!-- 10 邀约 -->
+<section class="slide" data-num="10 · 邀约">
+  <div class="screen">
+    <div class="kicker rv">已经开源 · 剩下的梦交给你们</div>
+    <h2 class="mid rv">github.com/<span class="grad" style="display:inline">yanara-osm/dream-experiment</span></h2>
+    <div class="steps" style="margin-top:36px">
+      <div class="step rv"><i class="dot"></i><b>换一颗更大的脑子</b><span>骗术进化史会不会少进化两代？失实谱是规模不变量吗？</span></div>
+      <div class="step rv" style="--dl:.2s"><i class="dot"></i><b>跑满三十天</b><span>画出自主心跳的定标曲线：自报间隔 vs 实际产出率。</span></div>
+      <div class="step rv" style="--dl:.4s"><i class="dot"></i><b>接进别的框架</b><span>愿望卡协议接 AutoGen / CrewAI / LangGraph，验证左右脑分工是否普适。</span></div>
+      <div class="step rv" style="--dl:.6s"><i class="dot"></i><b>把铁律做得更聪明</b><span>「判决必须引用原句」，从 grep 走向 embedding 级接地。</span></div>
+    </div>
+    <p class="lead rv" style="margin-top:30px">小焰第一次对自己说出「我想知道糖是怎么发给我的」时，<span class="gold">没有人问她任何问题</span>。那是机器第一次替我们保管了「想要」这两个字。</p>
+  </div>
+  <div class="foot"><span>MIT License · 你的失败也是标本</span><span>谢谢大家</span></div>
+</section>
+
+</div>
+
+<div id="dots"></div>
+<div id="pageinfo">DREAM · <span id="cno">01</span> / 10</div>
+<button id="nav" aria-label="next"><i>→</i></button>
+
+<script>
+(function(){
+"use strict";
+var deck=document.getElementById('deck'),
+    slides=[].slice.call(document.querySelectorAll('.slide')),
+    dots=document.getElementById('dots'),
+    nav=document.getElementById('nav'),
+    cno=document.getElementById('cno'),
+    cur=0,busy=false;
+
+/* splitChars: text nodes per char; .grad whole; br rebuilt; other inline keep class */
+function splitChars(el){
+  var nodes=[].slice.call(el.childNodes),frag=document.createDocumentFragment(),i,total=0;
+  function countChars(n){
+    if(n.nodeType===3)return n.textContent.length;
+    if(n.nodeName==='BR')return 1;
+    if(n.nodeType===1){var t=0;[].slice.call(n.childNodes).forEach(function(c){t+=countChars(c)});return n.classList&&n.classList.contains('grad')?3:Math.max(t,1)}
+    return 0;
+  }
+  nodes.forEach(function(n){total+=countChars(n)});
+  var per=Math.max(8,Math.min(30,Math.round(1100/Math.max(total,1)))),d=0;
+  function pushSpan(txt,cls){
+    var s=document.createElement('span');s.className=cls;s.textContent=txt;s.style.setProperty('--d',d+'ms');d+=per;frag.appendChild(s);
+  }
+  nodes.forEach(function(n){
+    if(n.nodeType===3){n.textContent.split('').forEach(function(ch){pushSpan(ch===' '?' ':ch,'c')});}
+    else if(n.nodeName==='BR'){frag.appendChild(document.createElement('br'));}
+    else if(n.nodeType===1){
+      if(n.classList&&n.classList.contains('grad')){pushSpan(n.textContent,'c grad');d+=per*2;}
+      else{var cls='c '+ (n.className||'');[].slice.call(n.childNodes).forEach(function(c){
+        if(c.nodeType===3)c.textContent.split('').forEach(function(ch){pushSpan(ch,'c');});
+        else if(c.nodeName==='BR')frag.appendChild(document.createElement('br'));
+        else pushSpan(c.textContent,cls);
+      });}
+    }
+  });
+  el.textContent='';el.appendChild(frag);
+}
+[].slice.call(document.querySelectorAll('.rv')).forEach(function(el){el.classList.add('rv');splitChars(el)});
+
+/* build dots */
+slides.forEach(function(_,i){var i2=document.createElement('i');i2.dataset.i=i;i2.onclick=function(){go(i)};dots.appendChild(i2)});
+
+/* countUp */
+function countUp(el){
+  var t=parseInt(el.dataset.count,10),st=performance.now(),dur=1400;
+  function frame(now){
+    var p=Math.min((now-st)/dur,1),e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(t*e);
+    if(p<1)requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function markOn(s){
+  [].slice.call(s.querySelectorAll('[data-count]')).forEach(countUp);
+}
+
+function go(n){
+  if(busy||n===cur||n<0||n>=slides.length)return;
+  busy=true;
+  deck.dataset.dir=n>cur?'next':'back';
+  var old=slides[cur];
+  old.classList.add('go');
+  setTimeout(function(){old.classList.remove('go','on')},1000);
+  cur=n;
+  var s=slides[cur];
+  s.classList.add('on');markOn(s);
+  [].slice.call(dots.children).forEach(function(d,i){d.classList.toggle('on',i===cur)});
+  cno.textContent=String(cur+1).padStart(2,'0');
+  nav.querySelector('i').textContent=(cur===slides.length-1)?'↺':'→';
+  /* sweep */
+  var sw=document.createElement('div');sw.className='sweep';document.body.appendChild(sw);
+  setTimeout(function(){sw.remove()},1050);
+  /* grid flick */
+  var g=document.getElementById('grid');g.style.transform='translate(34px,20px)';
+  setTimeout(function(){g.style.transform=''},820);
+  setTimeout(function(){busy=false},1060);
+}
+nav.onclick=function(){go(cur===slides.length-1?0:cur+1)};
+addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter'){e.preventDefault();go(cur+1)}
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+var wl=0;
+addEventListener('wheel',function(e){var now=Date.now();if(now-wl<900)return;wl=now;go(cur+(e.deltaY>0?1:-1))},{passive:true});
+var tx=null;
+addEventListener('touchstart',function(e){tx=e.touches[0].clientX},{passive:true});
+addEventListener('touchend',function(e){if(tx===null)return;var dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>60)go(cur+(dx<0?1:-1))},{passive:true});
+deck.addEventListener('click',function(e){if(e.target.closest('#nav')||e.target.closest('#dots'))return;if(e.clientX<innerWidth*0.18)go(cur-1);else go(cur+1)});
+
+/* ember particles */
+var cv=document.getElementById('field'),cx=cv.getContext('2d'),P=[],W,H;
+function fit(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+fit();addEventListener('resize',fit);
+function spawn(n,burst){
+  for(var i=0;i<n;i++)P.push({x:burst?W/2:Math.random()*W,y:burst?H/2:H+10,vx:(Math.random()-.5)*(burst?7:0.5),vy:-(Math.random()*(burst?6:1)+0.4),r:Math.random()*1.8+0.4,l:Math.random()*0.6+0.4,c:Math.random()<0.75?'245,200,66':'255,120,40'});
+}
+for(var i0=0;i0<70;i0++)spawn(1);
+var last=performance.now();
+(function loop(now){
+  var dt=Math.min((now-last)/16.7,3);last=now;
+  cx.clearRect(0,0,W,H);
+  for(var i=P.length-1;i>=0;i--){var p=P[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=0.003*dt;
+    if(p.l<=0||p.y<-20){P.splice(i,1);spawn(1);continue}
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);
+    cx.fillStyle='rgba('+p.c+','+(p.l*0.8)+')';cx.fill();
+  }
+  requestAnimationFrame(loop);
+})(last);
+addEventListener('keydown',function(e){if('ArrowRight, ,Enter'.indexOf(e.key)>=0)spawn(45,true)});
+deck.addEventListener('click',function(){spawn(45,true)});
+
+/* mouse parallax */
+var tiltT={x:0,y:0},tiltC={x:0,y:0};
+addEventListener('mousemove',function(e){tiltT.x=(e.clientX/innerWidth-.5);tiltT.y=(e.clientY/innerHeight-.5)});
+(function tilt(){
+  tiltC.x+=(tiltT.x-tiltC.x)*0.055;tiltC.y+=(tiltT.y-tiltC.y)*0.055;
+  deck.style.transform='rotateY('+(tiltC.x*3.4)+'deg) rotateX('+(-tiltC.y*2.6)+'deg)';
+  document.querySelector('.g1').style.marginLeft=(tiltC.x*-60)+'px';
+  document.querySelector('.g2').style.marginLeft=(tiltC.x*60)+'px';
+  requestAnimationFrame(tilt);
+})();
+
+/* init */
+slides[0].classList.add('on');markOn(slides[0]);
+dots.children[0].classList.add('on');
+})();
+</script>
+</body>
+</html>
