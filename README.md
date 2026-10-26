@@ -1,6 +1,6 @@
-# 小焰实验 · Xiaoyan Experiment
+# 梦想实验 · The Dream Experiment
 
-欲望驱动 LLM 智能体的八日观察实验（2026-10-18 起，进行中）。
+欲望驱动 LLM 智能体的八日观察实验（正式名「梦想」，实验体小焰；2026-10-18 起，进行中）。
 切断用户 prompt，27B 模型自激存活：心跳→读记忆→许愿→执行→回写。308 tick、346 万 tokens 的完整病理标本与协作协议。
 
 **论文**：[paper/xiaoyan_paper.md](paper/xiaoyan_paper.md) —《小焰：一个欲望驱动 LLM 智能体的八日观察实验》
