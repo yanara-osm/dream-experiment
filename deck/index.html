@@ -71,8 +71,8 @@ h2.sub{font-size:clamp(1.3rem,2.4vw,1.9rem);font-weight:400;color:var(--ink-soft
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:44px}
 .card{border:1.5px solid rgba(245,200,66,.4);border-radius:16px;padding:30px 30px 26px;background:linear-gradient(165deg,rgba(245,200,66,.07),rgba(10,8,6,.55));box-shadow:0 12px 44px rgba(0,0,0,.7),0 0 30px rgba(245,200,66,.1);display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
 .slide.on .card{animation:flipin .8s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:var(--dl,0ms)}
-.card h3{color:var(--gold);font-size:1.18rem;letter-spacing:.12em;margin-bottom:16px}
-.card p{font-size:1.02rem;line-height:1.95;color:#f2e8d5}
+.card h3{color:var(--gold);font-size:1.52rem;letter-spacing:.08em;margin-bottom:18px}
+.card p{font-size:1.14rem;line-height:1.9;color:#f4ead8}
 .card .tag{display:inline-block;margin-top:18px;font-size:.82rem;color:var(--ink-dim);letter-spacing:.15em}
 /* quote page */
 .quote{font-size:clamp(1.5rem,3vw,2.4rem);line-height:1.9;font-weight:700;max-width:26ch}
@@ -277,11 +277,23 @@ function splitChars(el){
     else if(n.nodeName==='BR'){frag.appendChild(document.createElement('br'));}
     else if(n.nodeType===1){
       if(n.classList&&n.classList.contains('grad')){pushSpan(n.textContent,'c grad');d+=per*2;}
-      else{var cls='c '+ (n.className||'');[].slice.call(n.childNodes).forEach(function(c){
-        if(c.nodeType===3)c.textContent.split('').forEach(function(ch){pushSpan(ch,'c');});
-        else if(c.nodeName==='BR')frag.appendChild(document.createElement('br'));
-        else pushSpan(c.textContent,cls);
-      });}
+      else{
+        /* 保留原元素（h3/p 等），只在其内部逐字：容器结构不塌，flex 不会把子字竖排 */
+        var wrap=document.createElement(n.nodeName);
+        if(n.className)wrap.className=n.className;
+        [].slice.call(n.childNodes).forEach(function(c){
+          if(c.nodeType===3){c.textContent.split('').forEach(function(ch){
+            var s=document.createElement('span');s.className='c';s.textContent=ch===' '?' ':ch;
+            s.style.setProperty('--d',d+'ms');d+=per;wrap.appendChild(s);
+          });}
+          else if(c.nodeName==='BR'){wrap.appendChild(document.createElement('br'));}
+          else {
+            var s2=document.createElement('span');s2.className='c '+(c.className||'');s2.textContent=c.textContent;
+            s2.style.setProperty('--d',d+'ms');d+=per;wrap.appendChild(s2);
+          }
+        });
+        frag.appendChild(wrap);
+      }
     }
   });
   el.textContent='';el.appendChild(frag);
